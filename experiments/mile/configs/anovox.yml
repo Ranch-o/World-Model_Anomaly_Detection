@@ -1,0 +1,74 @@
+LOG_DIR: '/disk/vanishing_data/qw825/tensorboard_logs'
+TAG: 'conv_decoder 5x13, concat'
+
+CML_PROJECT: 'bogdoll/world_model_yang'
+CML_TASK: 'mile'
+CML_TYPE: 'training'
+CML_DATASET: 'carla_dataset'
+
+CLUSTER: False
+GPUS: 1
+BATCHSIZE: 1
+STEPS: 100000
+VAL_CHECK_INTERVAL: 1500
+LOGGING_INTERVAL: 50
+LOG_VIDEO_INTERVAL: 150
+N_WORKERS: 16
+
+OPTIMIZER:
+  ACCUMULATE_GRAD_BATCHES: 16
+
+# PREDICTION:
+#   N_SAMPLES: 2
+
+EVAL:
+  RGB_SUPERVISION: True
+
+SEMANTIC_SEG:
+  ENABLED: False
+
+VOXEL_SEG:
+  ENABLED: False
+  DIMENSION: 128
+  N_CLASSES: 9
+  USE_WEIGHTS: True
+
+LIDAR_SEG:
+  ENABLED: False
+  N_CLASSES: 9
+  USE_WEIGHTS: True
+
+LIDAR_RE:
+  ENABLED: True
+
+SEMANTIC_IMAGE:
+  ENABLED: False
+  N_CLASSES: 9
+  USE_WEIGHTS: True
+
+DEPTH:
+  ENABLED: False
+
+LOSSES:
+  SSIM: False
+  RGB_INSTANCE: False
+
+RECEPTIVE_FIELD: 6
+FUTURE_HORIZON: 6
+
+IMAGE:
+  SIZE: (512, 768)
+  FOV: 90
+  CAMERA_POSITION: [1.0, 0.0, 2.0]  # (forward, right, up)
+  CROP: [0, 0, 768, 512]  # (left, top, right, bottom)
+
+PRETRAINED:
+  PATH: ''
+  CML_MODEL: '6a5cfa2fc6c74db4b1010a88d74cb6ac'
+
+DATASET:
+  DATAROOT: '/home/daniel/Downloads/AnoVox'
+  STRIDE_SEC: 0.2
+
+IMAGE:
+  CAMERA_POSITION: [1.0, 0.0, 2.0]  # (forward, right, up)

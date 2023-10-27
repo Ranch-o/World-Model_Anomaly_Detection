@@ -1,0 +1,41 @@
+LOG_DIR: '/disk/vanishing_data/du541/tensorboard_logs0'
+TAG: 'ad_17.10'
+
+GPUS: 1
+BATCHSIZE: 1
+STEPS: 100000
+VAL_CHECK_INTERVAL: 40
+LOGGING_INTERVAL: 20
+LOG_VIDEO_INTERVAL: 40
+N_WORKERS: 1
+
+OPTIMIZER:
+  ACCUMULATE_GRAD_BATCHES: 2
+
+#PREDICTION:
+#  N_SAMPLES: 3
+
+#MODEL:
+#  ROUTE:
+#    ENABLED: True
+#  TRANSFORMER:
+#    ENABLED: False
+#    CHANNELS: 256
+
+EVAL:
+  RGB_SUPERVISION: True
+
+RECEPTIVE_FIELD: 2
+FUTURE_HORIZON: 0
+
+PRETRAINED:
+  PATH: ''
+#  CML_MODEL: '6a5cfa2fc6c74db4b1010a88d74cb6ac'
+#  CML_MODEL: ''
+
+DATASET:
+  # DATAROOT: '/disk/vanishing_data/du541/AnoVox(Sample)/Anovox'
+  DATAROOT: '/disk/vanishing_data/du541/carla_dataset_test'
+
+IMAGE:
+  CAMERA_POSITION: [1.0, 0.0, 2.0]  # (forward, right, up)
