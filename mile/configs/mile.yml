@@ -34,8 +34,8 @@ PRETRAINED:
 #  CML_MODEL: ''
 
 DATASET:
-  # DATAROOT: '/disk/vanishing_data/du541/AnoVox(Sample)/Anovox'
-  DATAROOT: '/disk/vanishing_data/du541/carla_dataset_test'
+  DATAROOT: '/disk/vanishing_data/du541/AnoVox(Sample)/Anovox'
+  # DATAROOT: '/disk/vanishing_data/du541/carla_dataset_test'
 
 IMAGE:
   CAMERA_POSITION: [1.0, 0.0, 2.0]  # (forward, right, up)

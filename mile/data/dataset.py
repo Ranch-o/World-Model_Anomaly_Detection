@@ -285,6 +285,10 @@ class AnovoxDataset(Dataset):
 
         # Load image
         image = Image.open(image_path)
+
+        if image.mode == 'RGBA':
+            image = image.convert('RGB')
+
         image = np.asarray(image).transpose((2, 0, 1))
         single_element_t["image"] = image
 
