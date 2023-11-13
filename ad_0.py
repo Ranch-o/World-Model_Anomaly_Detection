@@ -266,12 +266,12 @@ if __name__ == "__main__":
     # model = Mile(cfg, load_weights=True, checkpoint_path='/disk/vanishing_data/du541/epoch=19-step=30000.ckpt')
     
 
-    # data = DataModule(cfg) # Local Test needed 
+    data = DataModule(cfg) # Local Test needed 
     # data = AnovoxDataset(cfg, '/disk/vanishing_data/du541/AnoVox(Sample)/Anovox')
 
-    anovox_dataset_root = '/disk/vanishing_data/du541/AnoVox(Sample)/Anovox'
-    data = AnovoxDataset(cfg, dataset_root=anovox_dataset_root)
-    # data.setup() # 11.10.2023
+    # anovox_dataset_root = '/disk/vanishing_data/du541/AnoVox(Sample)/Anovox'
+    # data = AnovoxDataset(cfg, dataset_root=anovox_dataset_root)
+    data.setup() # 11.10.2023
 
     model = WorldModelTrainer(cfg.convert_to_dict())
 
@@ -288,7 +288,7 @@ if __name__ == "__main__":
 
 
     # with torch.no_grad():
-    checkpoint = torch.load('/disk/vanishing_data/du541/epoch=19-step=30000.ckpt')
+    checkpoint = torch.load('/disk/vanishing_data/du541/epoch=65-step=99000_.ckpt')
     state_dict = checkpoint['state_dict']
     # Remove 'model.' prefix from state_dict keys
     new_state_dict = {k.replace('model.', ''): v for k, v in state_dict.items()}

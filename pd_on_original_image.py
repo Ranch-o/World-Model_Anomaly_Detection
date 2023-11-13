@@ -7,9 +7,13 @@ import matplotlib.pyplot as plt
 import numpy as np
 import os
 
+# # Define paths to the gif files
+# input_gif_path = '/disk/vanishing_data/du541/pred_outputs_0_input_0.gif'
+# synthesized_gif_path = '/disk/vanishing_data/du541/pred_outputs_0_pred_0.gif'
+
 # Load images
-input_image_path = '/disk/users/du541/Desktop/1.png'
-synthesized_image_path = '/disk/users/du541/Desktop/2.png'
+input_image_path = 'pd_visualization_results__batch_frames/original/frame_5.png'
+synthesized_image_path = 'pd_visualization_results__batch_frames/reconstructed/frame_5.png'
 input_image = Image.open(input_image_path).convert('RGB')
 print(input_image.size)
 synthesized_image = Image.open(synthesized_image_path).convert('RGB')
@@ -103,13 +107,13 @@ for h in range(height):
         perceptual_difference_per_pixel[h, w] = perceptual_difference
 
 # Normalization
-min_val = perceptual_difference_per_pixel.min()
-max_val = perceptual_difference_per_pixel.max()
-normalized_perceptual_difference_per_pixel = (perceptual_difference_per_pixel - min_val) / (max_val - min_val)
+# min_val = perceptual_difference_per_pixel.min()
+# max_val = perceptual_difference_per_pixel.max()
+# normalized_perceptual_difference_per_pixel = (perceptual_difference_per_pixel - min_val) / (max_val - min_val)
 
 
 # Interpolate the perceptual difference tensor to match the original image dimensions
-perceptual_difference_resized = F.interpolate(normalized_perceptual_difference_per_pixel.unsqueeze(0).unsqueeze(0),
+perceptual_difference_resized = F.interpolate(perceptual_difference_per_pixel.unsqueeze(0).unsqueeze(0),
                                               size=(original_height, original_width),
                                               mode='bilinear', align_corners=False).squeeze()
 
@@ -154,4 +158,4 @@ axs[2].axis('off')  # Hide axes
 fig.colorbar(im, ax=axs[2], label='Perceptual Difference')
 
 # Save the figure to a file
-plt.savefig('comparison_normalized.png', bbox_inches='tight')  # This line saves the figure to a file
+plt.savefig('comparison_normalized_frame_5.png', bbox_inches='tight')  # This line saves the figure to a file

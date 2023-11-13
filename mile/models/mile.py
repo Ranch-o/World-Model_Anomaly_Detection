@@ -380,7 +380,7 @@ class Mile(nn.Module):
 
     def forward(self, batch, deployment=False):
 
-        print("Inside Model, Image Shape:", batch['image'].shape)
+        # print("Inside Model, Image Shape:", batch['image'].shape)
         """
         Parameters
         ----------
@@ -399,7 +399,30 @@ class Mile(nn.Module):
         rf = self.cfg.RECEPTIVE_FIELD
         fh = self.cfg.FUTURE_HORIZON
         b, s = batch['image'][:, :rf].shape[:2]
+
+        # device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
+        # dummy_speed_data = torch.zeros(b, rf, 1, device=device)
+        # batch['speed'] = dummy_speed_data
+        
+        # c, h_r, w_r = 3, 192, 192
+        # dummy_route_map_data = torch.zeros(b, rf, c, h_r, w_r, device=device)
+        # batch['route_map'] = dummy_route_map_data
+
         embedding = self.encode({key: value[:, :rf] for key, value in batch.items()})  # dim (b, s, 512)
+
+        # # Prepare the input dictionary for the encoder
+        # encoder_input = {
+        #     'image': batch['image'][:, :rf],
+        #     'intrinsics': batch['intrinsics'][:, :rf],
+        #     'extrinsics': batch['extrinsics'][:, :rf],
+        #     'throttle_brake': batch['throttle_brake'][:, :rf],
+        #     'steering': batch['steering'][:, :rf],
+        # }
+
+        # # Encode the inputs to a 512-dimensional vector or whatever dimensionality is expected
+        # embedding = self.encode(encoder_input)  # encode method needs to be compatible with this input
+
 
         output = dict()
         if self.cfg.MODEL.TRANSITION.ENABLED:

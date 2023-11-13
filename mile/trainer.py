@@ -441,103 +441,118 @@ class WorldModelTrainer(pl.LightningModule):
             # name_ = f'{name}_rgb'
             # writer.add_video(name_, visualisation_rgb, global_step=global_step, fps=2)
 
-            rgb_target = batch['rgb_label_1']       #444-504
+            rgb_target = batch['rgb_label_1']
             rgb_pred = output['rgb_1'].detach()
-            rgb_imagines = []
-            for imagine in output_imagine:
-                rgb_imagines.append(imagine['rgb_1'].detach())
 
-            b, _, c, h, w = rgb_target.size()
-
-            rgb_preds = []
-            for i, rgb_imagine in enumerate(rgb_imagines):
-                rgb_receptive = rgb_pred if i == 0 else torch.ones_like(rgb_pred)
-                pred_imagine = torch.cat([rgb_receptive, rgb_imagine], dim=1)
-                rgb_preds.append(F.pad(pred_imagine, [5, 5, 5, 5], 'constant', 0.8))
-
-            rgb_target = F.pad(rgb_target, [5, 5, 5, 5], 'constant', 0.8)
-            # rgb_pred = F.pad(rgb_pred, [5, 5, 5, 5], 'constant', 0.8)
-
-            acc = batch['throttle_brake']
-            steer = batch['steering']
-
-            acc_bar = np.ones((b, s+f, int(h/4), w+10, c)).astype(np.uint8) * 255
-            steer_bar = np.ones((b, s+f, int(h/4), w+10, c)).astype(np.uint8) * 255
-
-            red = np.array([200, 0, 0])[None, None]
-            green = np.array([0, 200, 0])[None, None]
-            blue = np.array([0, 0, 200])[None, None]
-            mid = int(w / 2) + 5
-
-            for b_idx in range(b):
-                for step in range(s+f):
-                    if acc[b_idx, step] >= 0:
-                        acc_bar[b_idx, step, 5: -5, mid: mid + int(w / 2 * acc[b_idx, step]), :] = green
-                        cv2.putText(acc_bar[b_idx, step], f'{acc[b_idx, step, 0]:.5f}', (mid - 220, int(h / 8) + 15),
-                                    cv2.FONT_HERSHEY_DUPLEX, 1.5, (0, 0, 0), 2, cv2.LINE_AA)
-                    else:
-                        acc_bar[b_idx, step, 5: -5, mid + int(w / 2 * acc[b_idx, step]): mid, :] = red
-                        cv2.putText(acc_bar[b_idx, step], f'{acc[b_idx, step, 0]:.5f}', (mid + 10, int(h/8)+15),
-                                    cv2.FONT_HERSHEY_DUPLEX, 1.5, (0, 0, 0), 2, cv2.LINE_AA)
-                    if steer[b_idx, step] >= 0:
-                        steer_bar[b_idx, step, 5: -5, mid: mid + int(w / 2 * steer[b_idx, step]), :] = blue
-                        cv2.putText(steer_bar[b_idx, step], f'{steer[b_idx, step, 0]:.5f}', (mid - 220, int(h / 8) + 15),
-                                    cv2.FONT_HERSHEY_DUPLEX, 1.5, (0, 0, 0), 2, cv2.LINE_AA)
-                    else:
-                        steer_bar[b_idx, step, 5: -5, mid + int(w / 2 * steer[b_idx, step]): mid, :] = blue
-                        cv2.putText(steer_bar[b_idx, step], f'{steer[b_idx, step, 0]:.5f}', (mid + 10, int(h / 8) + 15),
-                                    cv2.FONT_HERSHEY_DUPLEX, 1.5, (0, 0, 0), 2, cv2.LINE_AA)
-            acc_bar = torch.tensor(acc_bar.transpose((0, 1, 4, 2, 3)),
-                                   dtype=torch.float, device=rgb_pred.device) / 255.0
-            steer_bar = torch.tensor(steer_bar.transpose((0, 1, 4, 2, 3)),
-                                     dtype=torch.float, device=rgb_pred.device) / 255.0
-
-            rgb = torch.cat([acc_bar, steer_bar, rgb_target, *rgb_preds], dim=-2)
-            visualisation_rgb = []
-            for step in range(s+f):
-                if step == s:
-                    visualisation_rgb.append(torch.ones(b, c, rgb.size(-2), int(w/4), device=rgb_pred.device))
-                visualisation_rgb.append(rgb[:, step, ...])
+            # Save each input and corresponding predicted video independently
+            for i in range(len(rgb_target)):
+                # Extract the input video frames
+                input_video = rgb_target[i].unsqueeze(0).detach()  # Add a batch dimension
+                input_video_name = f'{name}_input_{i}'
+                writer.add_video(input_video_name, input_video, global_step=global_step, fps=2)
                 
-            visualisation_rgb = torch.cat(visualisation_rgb, dim=-1).detach()
+                # Extract the corresponding predicted video frames
+                predicted_video = rgb_pred[i].unsqueeze(0).detach()  # Add a batch dimension
+                predicted_video_name = f'{name}_pred_{i}'
+                writer.add_video(predicted_video_name, predicted_video, global_step=global_step, fps=2)
 
-            name_ = f'{name}_rgb'
-            writer.add_images(name_, visualisation_rgb, global_step=global_step)
+            # rgb_target = batch['rgb_label_1']       #444-504
+            # rgb_pred = output['rgb_1'].detach()
+            # rgb_imagines = []
+            # for imagine in output_imagine:
+            #     rgb_imagines.append(imagine['rgb_1'].detach())
 
+            # b, _, c, h, w = rgb_target.size()
 
-            # Extracting the intermediate features from the output
-            features = output['rgb_1']
+            # rgb_preds = []
+            # for i, rgb_imagine in enumerate(rgb_imagines):
+            #     rgb_receptive = rgb_pred if i == 0 else torch.ones_like(rgb_pred)
+            #     pred_imagine = torch.cat([rgb_receptive, rgb_imagine], dim=1)
+            #     rgb_preds.append(F.pad(pred_imagine, [5, 5, 5, 5], 'constant', 0.8))
 
-            concatenated_features = []
+            # rgb_target = F.pad(rgb_target, [5, 5, 5, 5], 'constant', 0.8)
+            # # rgb_pred = F.pad(rgb_pred, [5, 5, 5, 5], 'constant', 0.8)
 
+            # acc = batch['throttle_brake']
+            # steer = batch['steering']
 
-            # For each layer's output, visualize the feature map from the first batch item
-            for layer_idx in range(6):
-                feature_map = features[:, layer_idx, :, :, :].unsqueeze(1).detach()
+            # acc_bar = np.ones((b, s+f, int(h/4), w+10, c)).astype(np.uint8) * 255
+            # steer_bar = np.ones((b, s+f, int(h/4), w+10, c)).astype(np.uint8) * 255
 
-                # Normalize the feature map for visualization
-                min_val = feature_map.min()
-                max_val = feature_map.max()
-                feature_map = (feature_map - min_val) / (max_val - min_val)
+            # red = np.array([200, 0, 0])[None, None]
+            # green = np.array([0, 200, 0])[None, None]
+            # blue = np.array([0, 0, 200])[None, None]
+            # mid = int(w / 2) + 5
 
-                concatenated_features.append(feature_map)
+            # for b_idx in range(b):
+            #     for step in range(s+f):
+            #         if acc[b_idx, step] >= 0:
+            #             acc_bar[b_idx, step, 5: -5, mid: mid + int(w / 2 * acc[b_idx, step]), :] = green
+            #             cv2.putText(acc_bar[b_idx, step], f'{acc[b_idx, step, 0]:.5f}', (mid - 220, int(h / 8) + 15),
+            #                         cv2.FONT_HERSHEY_DUPLEX, 1.5, (0, 0, 0), 2, cv2.LINE_AA)
+            #         else:
+            #             acc_bar[b_idx, step, 5: -5, mid + int(w / 2 * acc[b_idx, step]): mid, :] = red
+            #             cv2.putText(acc_bar[b_idx, step], f'{acc[b_idx, step, 0]:.5f}', (mid + 10, int(h/8)+15),
+            #                         cv2.FONT_HERSHEY_DUPLEX, 1.5, (0, 0, 0), 2, cv2.LINE_AA)
+            #         if steer[b_idx, step] >= 0:
+            #             steer_bar[b_idx, step, 5: -5, mid: mid + int(w / 2 * steer[b_idx, step]), :] = blue
+            #             cv2.putText(steer_bar[b_idx, step], f'{steer[b_idx, step, 0]:.5f}', (mid - 220, int(h / 8) + 15),
+            #                         cv2.FONT_HERSHEY_DUPLEX, 1.5, (0, 0, 0), 2, cv2.LINE_AA)
+            #         else:
+            #             steer_bar[b_idx, step, 5: -5, mid + int(w / 2 * steer[b_idx, step]): mid, :] = blue
+            #             cv2.putText(steer_bar[b_idx, step], f'{steer[b_idx, step, 0]:.5f}', (mid + 10, int(h / 8) + 15),
+            #                         cv2.FONT_HERSHEY_DUPLEX, 1.5, (0, 0, 0), 2, cv2.LINE_AA)
+            # acc_bar = torch.tensor(acc_bar.transpose((0, 1, 4, 2, 3)),
+            #                        dtype=torch.float, device=rgb_pred.device) / 255.0
+            # steer_bar = torch.tensor(steer_bar.transpose((0, 1, 4, 2, 3)),
+            #                          dtype=torch.float, device=rgb_pred.device) / 255.0
 
-            # Concatenate all the normalized feature maps
-            all_features = torch.cat(concatenated_features, dim=-2)
-            all_features = all_features[:, 0]
+            # rgb = torch.cat([acc_bar, steer_bar, rgb_target, *rgb_preds], dim=-2)
+            # visualisation_rgb = []
+            # for step in range(s+f):
+            #     if step == s:
+            #         visualisation_rgb.append(torch.ones(b, c, rgb.size(-2), int(w/4), device=rgb_pred.device))
+            #     visualisation_rgb.append(rgb[:, step, ...])
+                
+            # visualisation_rgb = torch.cat(visualisation_rgb, dim=-1).detach()
 
-
-            # Concatenate the RGB images with the normalized feature maps
-            # visualisation_rgb_all_layers = torch.cat([rgb_pred, rgb_target, all_features], dim=-2).detach()
-            name_ = f'{prefix}_rgb_all_layers'
-            writer.add_images(name_, all_features, global_step=global_step)
-            # self.logger.experiment.add_video(name_, all_features, global_step=self.global_step, fps=2)
-
-
-            # visualisation_rgb = torch.cat([rgb_pred, rgb_target], dim=-2).detach()
             # name_ = f'{name}_rgb'
             # writer.add_images(name_, visualisation_rgb, global_step=global_step)
-            # # # self.logger.experiment.add_video(name_, visualisation_rgb, global_step=self.global_step, fps=2)
+
+
+            # # Extracting the intermediate features from the output
+            # features = output['rgb_1']
+
+            # concatenated_features = []
+
+
+            # # For each layer's output, visualize the feature map from the first batch item
+            # for layer_idx in range(6):
+            #     feature_map = features[:, layer_idx, :, :, :].unsqueeze(1).detach()
+
+            #     # Normalize the feature map for visualization
+            #     min_val = feature_map.min()
+            #     max_val = feature_map.max()
+            #     feature_map = (feature_map - min_val) / (max_val - min_val)
+
+            #     concatenated_features.append(feature_map)
+
+            # # Concatenate all the normalized feature maps
+            # all_features = torch.cat(concatenated_features, dim=-2)
+            # all_features = all_features[:, 0]
+
+
+            # # Concatenate the RGB images with the normalized feature maps
+            # # visualisation_rgb_all_layers = torch.cat([rgb_pred, rgb_target, all_features], dim=-2).detach()
+            # name_ = f'{prefix}_rgb_all_layers'
+            # writer.add_images(name_, all_features, global_step=global_step)
+            # # self.logger.experiment.add_video(name_, all_features, global_step=self.global_step, fps=2)
+
+
+            # # visualisation_rgb = torch.cat([rgb_pred, rgb_target], dim=-2).detach()
+            # # name_ = f'{name}_rgb'
+            # # writer.add_images(name_, visualisation_rgb, global_step=global_step)
+            # # # # self.logger.experiment.add_video(name_, visualisation_rgb, global_step=self.global_step, fps=2)
 
 
 
