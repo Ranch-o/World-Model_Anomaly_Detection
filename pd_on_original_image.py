@@ -107,27 +107,57 @@ for h in range(height):
         perceptual_difference_per_pixel[h, w] = perceptual_difference
 
 # Normalization
-# min_val = perceptual_difference_per_pixel.min()
-# max_val = perceptual_difference_per_pixel.max()
-# normalized_perceptual_difference_per_pixel = (perceptual_difference_per_pixel - min_val) / (max_val - min_val)
+min_val = perceptual_difference_per_pixel.min()
+max_val = perceptual_difference_per_pixel.max()
+normalized_perceptual_difference_per_pixel = (perceptual_difference_per_pixel - min_val) / (max_val - min_val)
 
 
 # Interpolate the perceptual difference tensor to match the original image dimensions
-perceptual_difference_resized = F.interpolate(perceptual_difference_per_pixel.unsqueeze(0).unsqueeze(0),
+perceptual_difference_resized = F.interpolate(normalized_perceptual_difference_per_pixel.unsqueeze(0).unsqueeze(0),
                                               size=(original_height, original_width),
                                               mode='bilinear', align_corners=False).squeeze()
 
 
 print(perceptual_difference_resized.shape)
+
+# Desired output size in pixels
+output_width, output_height = 832, 320
+
+# Choose a DPI for the output image
+# DPI (Dots Per Inch) defines how many pixels will be placed in one inch of the image.
+# For example, if you want to print the image without scaling, a common DPI for printers is 300.
+dpi = 100  # This is an example; you can adjust this value based on your requirements
+
+# Calculate figure size in inches for the desired output resolution
+fig_width = output_width / dpi
+fig_height = output_height / dpi
+
+# Create a figure with the desired size and DPI
+fig = plt.figure(figsize=(fig_width, fig_height), dpi=dpi)
+
+# Plot the heatmap
+plt.imshow(perceptual_difference_resized.cpu().numpy(), cmap='hot', aspect='auto')
+
+# Remove axes and padding
+plt.axis('off')
+plt.subplots_adjust(top=1, bottom=0, right=1, left=0, hspace=0, wspace=0)
+plt.margins(0,0)
+plt.gca().xaxis.set_major_locator(plt.NullLocator())
+plt.gca().yaxis.set_major_locator(plt.NullLocator())
+
+
+# plt.imshow(perceptual_difference_resized, cmap='hot, aspect='auto'
+plt.savefig('perceptual_difference_depth.png', bbox_inches='tight', pad_inches=0, dpi=dpi)
+
 # # Display the perceptual difference
 # plt.imshow(perceptual_difference_resized.cpu().numpy(), cmap='hot')
 # plt.colorbar(label='Perceptual Difference')
 # plt.show()
 
-# # Display the perceptual difference
+# Display the perceptual difference
 # plt.imshow(perceptual_difference_resized.cpu().numpy(), cmap='hot')
 # plt.colorbar(label='Perceptual Difference')
-# plt.savefig('perceptual_difference.png')  # This line saves the figure to a file
+# plt.savefig('perceptual_difference_depth.png')  # This line saves the figure to a file
 
 
 # # Resize the perceptual difference map back to the original image dimensions
@@ -157,5 +187,5 @@ axs[2].axis('off')  # Hide axes
 # Add a colorbar to the perceptual difference subplot
 fig.colorbar(im, ax=axs[2], label='Perceptual Difference')
 
-# Save the figure to a file
-plt.savefig('comparison_normalized_frame_5.png', bbox_inches='tight')  # This line saves the figure to a file
+# # Save the figure to a file
+# plt.savefig('comparison_normalized_frame_5.png', bbox_inches='tight')  # This line saves the figure to a file

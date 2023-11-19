@@ -1,4 +1,4 @@
-LOG_DIR: '/disk/vanishing_data/du541/tensorboard_logs4'
+LOG_DIR: '/disk/vanishing_data/du541/tensorboard_logs5'
 TAG: 'ad_17.10'
 
 GPUS: 1
