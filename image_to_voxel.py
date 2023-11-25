@@ -156,31 +156,74 @@ def transform_pcd(scores, depths):
     point_list = []
     anomaly_score_list = []
 
+    # for i in range(height):
+    #     for j in range(width):
+    #         z = depths[i,j]
+    #         anomaly_score = scores[i][j]
+    #         # depth encoded in rgb values. For further information take a look at carla docs
+    #         # depth_color[2] = B
+    #         # depth_color[1] = G
+    #         # depth_color[0] = R
+
+    #         x, y = (j - cx) * z / focal, (i - cy) * z / focal
+    #         coordinate = [x,y,z]
+
+    #         if np.linalg.norm(coordinate) > 100:
+    #             continue
+    #         else:
+    #             point_list.append(coordinate)
+    #         # red, green, blue = (
+    #         #     semantic_color[0],
+    #         #     semantic_color[1],
+    #         #     semantic_color[2],
+    #         # )
+    #         # point_color = [
+    #         #     i / 255.0 for i in [red, green, blue]
+    #         # ]  # format to o3d color values
+    #         anomaly_score_list.append(anomaly_score)
+
+    # Original crop dimensions
+    original_crop = [64, 138, 896, 458]  # left, top, right, bottom
+
+    # Original and new sizes
+    original_size = (960, 600)
+    new_size = (768, 512)
+
+    # Calculate scaling factors
+    scale_width = new_size[0] / original_size[0]
+    scale_height = new_size[1] / original_size[1]
+
+    # Adjust crop dimensions to the scaled size
+    scaled_crop = [
+        int(original_crop[0] * scale_width),  # left
+        int(original_crop[1] * scale_height),  # top
+        int(original_crop[2] * scale_width),  # right
+        int(original_crop[3] * scale_height)   # bottom
+    ]
+
+    # Voxelization loop
     for i in range(height):
         for j in range(width):
-            z = depths[i,j]
+            # Check if the pixel is within the meaningful region
+            if not (scaled_crop[0] <= j < scaled_crop[2] and scaled_crop[1] <= i < scaled_crop[3]):
+                continue  # Skip pixels outside the meaningful region
+
+            z = depths[i, j]
             anomaly_score = scores[i][j]
-            # depth encoded in rgb values. For further information take a look at carla docs
-            # depth_color[2] = B
-            # depth_color[1] = G
-            # depth_color[0] = R
 
             x, y = (j - cx) * z / focal, (i - cy) * z / focal
-            coordinate = [x,y,z]
+            coordinate = [x, y, z]
 
             if np.linalg.norm(coordinate) > 100:
                 continue
             else:
                 point_list.append(coordinate)
-            # red, green, blue = (
-            #     semantic_color[0],
-            #     semantic_color[1],
-            #     semantic_color[2],
-            # )
-            # point_color = [
-            #     i / 255.0 for i in [red, green, blue]
-            # ]  # format to o3d color values
+
             anomaly_score_list.append(anomaly_score)
+
+
+
+
 
     depth_pcloud = o3d.geometry.PointCloud()  # create point cloud object
     depth_pcloud.points = o3d.utility.Vector3dVector(
@@ -406,7 +449,7 @@ def _voxel_filter(pcd, sem, voxel_resolution, voxel_size, offset):
 
 def main():
     # depth_img_dir = os.path.join(args.dataset_path, 'DEPTH_IMG')
-    scores_dir = '/disk/vanishing_data/du541/anomaly_scores'
+    scores_dir = '/disk/vanishing_data/du541/anomaly_scores/768_512_scores_anovox'
     # scores_dir = '/home/tes_unreal/Desktop/BA/RbA/anomaly_scores/swin_b_1dl/anovox'
 
     scores_data = sorted(os.listdir(scores_dir))

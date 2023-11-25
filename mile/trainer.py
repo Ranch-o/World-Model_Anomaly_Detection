@@ -322,7 +322,7 @@ class WorldModelTrainer(pl.LightningModule):
             )
             self.log(f'{prefix}_ssim', ssim_value)
 
-        # Visualisation
+        #  Visualisation
         if prefix == 'train':
             visualisation_criteria = (self.global_step % self.cfg.LOG_VIDEO_INTERVAL == 0) \
                                    & (self.global_step != self.vis_step)
@@ -434,6 +434,7 @@ class WorldModelTrainer(pl.LightningModule):
             writer.add_images(name_, visualisation_bev, global_step=global_step)
 
         if self.cfg.EVAL.RGB_SUPERVISION:
+
             # rgb_target = batch['rgb_label_1']
             # rgb_pred = output['rgb_1'].detach()
 
@@ -455,6 +456,39 @@ class WorldModelTrainer(pl.LightningModule):
                 predicted_video = rgb_pred[i].unsqueeze(0).detach()  # Add a batch dimension
                 predicted_video_name = f'{name}_pred_{i}'
                 writer.add_video(predicted_video_name, predicted_video, global_step=global_step, fps=2)
+
+            # # 从这里开始
+            # rgb_target = batch['rgb_label_1']       # 实际的目标图像
+            # rgb_pred = output['rgb_1'].detach()     # 模型的当前预测图像
+            # rgb_imagines = []
+            # for imagine in output_imagine:
+            #     rgb_imagines.append(imagine['rgb_1'].detach())  # 模型的一系列预测图像
+
+            # # 确定图像的尺寸
+            # b, _, c, h, w = rgb_target.size()
+
+            # # 准备一个列表来保存所有预测图像，包括当前和未来的预测
+            # rgb_preds = [rgb_pred] + rgb_imagines
+
+            # # 现在我们有了目标图像和所有预测图像，我们可以把它们放入一个列表中进行可视化
+            # # 我们首先将目标图像和预测图像序列合并到一起
+            # visualisation_rgb = [rgb_target] + rgb_preds
+
+            # # 接下来，我们将所有图像拼接成一个大的张量以供可视化
+            # # 注意：这里假设所有图像已经具有相同的尺寸，不需要填充
+            # visualisation_rgb = torch.cat(visualisation_rgb, dim=-1)
+
+            # # 添加一个分隔列以区分不同的图像序列
+            # separator = torch.ones(b, c, h, 10) * 0.5  # 灰色分隔符
+            # visualisation_rgb = torch.cat([visualisation_rgb, separator], dim=-1)
+
+            # # 最后，我们将完整的图像序列发送到 TensorBoard
+            # name_ = f'{name}_rgb'
+            # writer.add_images(name_, visualisation_rgb, global_step=global_step)
+
+
+
+
 
             # rgb_target = batch['rgb_label_1']       #444-504
             # rgb_pred = output['rgb_1'].detach()
@@ -518,6 +552,8 @@ class WorldModelTrainer(pl.LightningModule):
 
             # name_ = f'{name}_rgb'
             # writer.add_images(name_, visualisation_rgb, global_step=global_step)
+
+
 
 
             # # Extracting the intermediate features from the output

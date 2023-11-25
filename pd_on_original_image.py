@@ -12,8 +12,8 @@ import os
 # synthesized_gif_path = '/disk/vanishing_data/du541/pred_outputs_0_pred_0.gif'
 
 # Load images
-input_image_path = 'pd_visualization_results__batch_frames/original/frame_5.png'
-synthesized_image_path = 'pd_visualization_results__batch_frames/reconstructed/frame_5.png'
+input_image_path = '/disk/vanishing_data/du541/RGB_in_anovox_832_320_images/frame_1850.png'
+synthesized_image_path = '/disk/vanishing_data/du541/RGB_out_anovox_832_320_images/frame_1850.png'
 input_image = Image.open(input_image_path).convert('RGB')
 print(input_image.size)
 synthesized_image = Image.open(synthesized_image_path).convert('RGB')
@@ -106,14 +106,14 @@ for h in range(height):
             perceptual_difference += pixel_difference.item()
         perceptual_difference_per_pixel[h, w] = perceptual_difference
 
-# Normalization
-min_val = perceptual_difference_per_pixel.min()
-max_val = perceptual_difference_per_pixel.max()
-normalized_perceptual_difference_per_pixel = (perceptual_difference_per_pixel - min_val) / (max_val - min_val)
+# # Normalization
+# min_val = perceptual_difference_per_pixel.min()
+# max_val = perceptual_difference_per_pixel.max()
+# normalized_perceptual_difference_per_pixel = (perceptual_difference_per_pixel - min_val) / (max_val - min_val)
 
 
 # Interpolate the perceptual difference tensor to match the original image dimensions
-perceptual_difference_resized = F.interpolate(normalized_perceptual_difference_per_pixel.unsqueeze(0).unsqueeze(0),
+perceptual_difference_resized = F.interpolate(perceptual_difference_per_pixel.unsqueeze(0).unsqueeze(0),
                                               size=(original_height, original_width),
                                               mode='bilinear', align_corners=False).squeeze()
 
@@ -147,7 +147,7 @@ plt.gca().yaxis.set_major_locator(plt.NullLocator())
 
 
 # plt.imshow(perceptual_difference_resized, cmap='hot, aspect='auto'
-plt.savefig('perceptual_difference_depth.png', bbox_inches='tight', pad_inches=0, dpi=dpi)
+# plt.savefig('perceptual_difference_depth.png', bbox_inches='tight', pad_inches=0, dpi=dpi)
 
 # # Display the perceptual difference
 # plt.imshow(perceptual_difference_resized.cpu().numpy(), cmap='hot')
@@ -187,5 +187,5 @@ axs[2].axis('off')  # Hide axes
 # Add a colorbar to the perceptual difference subplot
 fig.colorbar(im, ax=axs[2], label='Perceptual Difference')
 
-# # Save the figure to a file
-# plt.savefig('comparison_normalized_frame_5.png', bbox_inches='tight')  # This line saves the figure to a file
+# Save the figure to a file
+plt.savefig('comparison_frame_1850.png', bbox_inches='tight')  # This line saves the figure to a file
