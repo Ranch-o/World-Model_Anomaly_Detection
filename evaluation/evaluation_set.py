@@ -9,6 +9,7 @@ from time import sleep
 from PIL import Image
 import argparse
 import os
+import shutil
 from pathlib import Path
 import random
 from dataclasses import dataclass, field
@@ -54,27 +55,19 @@ def collect_data(pred_dir, gts_dir, data_type):
         if isinstance(file_path, tuple):
             file_path = file_path[0]
         identifier = (os.path.basename(file_path).split('.')[0]).split('_')[-1]
-        if identifier.isdigit():
-            return int(identifier)
-        else:
-            return identifier
+        return int(identifier)
 
     gt_grids = []
 
 
     scenario_dict = defaultdict(dict)
     for scenario in os.listdir(gts_dir):
-        if scenario == 'Scenario_Configuration_Files' or not os.path.isdir(os.path.join(gts_dir, scenario)):
+        if scenario == 'Scenario_Configuration_Files':
             continue
         voxel_dir = os.path.join(gts_dir, scenario, 'VOXEL_GRID')
-        if not os.path.isdir(voxel_dir):
-            continue
         for grid in os.listdir(voxel_dir):
             voxel_path = os.path.join(voxel_dir, grid)
             #gt_grids.append(os.path.join(voxel_dir, grid))
-
-            anomaly_found = False
-
             if data_type == 'image':
                 image_path = voxel_path.replace('VOXEL_GRID', 'SEMANTIC_IMG').replace('npy', 'png')
                 # path_split = image_path.split('.')
@@ -177,8 +170,54 @@ def create_size_detection_dict(anomaly_size_dict):
 
 
 def main(args):
+    voxelpred_dir, anovox_dir, datatype =  args.predictions, args.anovox_datapath, args.datatype
 
-    voxelpred_dir, anovox_dir =  args.predictions, args.anovox_datapath
+
+    if args.intersected_grids_dir:
+        total_groundtruth_array = os.path.join(args.intersected_grids_dir, 'total_gts.npy')
+        all_gt_labels = list(np.load(total_groundtruth_array))
+        pred_dir = args.predictions
+
+        pred_list, anovox_list, scenario_dict = collect_data(voxelpred_dir, anovox_dir, datatype)
+
+
+        anovox_grids, anomaly_in_view = [x[0] for x in anovox_list], [y[1] for y in anovox_list]
+
+        detectable_mask = []
+        anomaly_size_mask = []
+        for i, grid in enumerate(anovox_grids):
+            # check if anomaly is viewable for sensor and in voxel grid
+            viewable_for_sensor = anomaly_in_view[i]
+            grid_labels = np.load(grid)[:,-1:]
+            detectable_mask.append(metrics.anomaly_included(grid_labels) and viewable_for_sensor)
+
+            # extract anomaly size
+            scenario_path = os.path.normpath(gt_grid)
+            scenario_path = scenario_path.split(os.sep)
+            scenario_id = scenario_path[-3]
+            anomaly_attributes = scenario_dict[scenario_id]
+            size = anomaly_attributes['size']
+            anomaly_size_mask.append(size)
+
+        all_predictions = []
+        anomaly_only_predictions = []
+
+        # initialize size dictionary
+        all_sizes = set(anomaly_size_mask)
+        size_dict = defaultdict(list)
+        for size in all_sizes:
+            size_dict[size] = []
+
+        for i, prediction in enumerate(pred_list):
+            prediction_scores = np.load(prediction)[:,-1:]
+            prediction_scores = np.squeeze(prediction_scores)
+            all_predictions.extend(prediction_scores)
+            if detectable_mask[i]:
+                anomaly_only_predictions.extend(prediction_scores)
+                size = anomaly_size_mask[size]
+                size_dict[size].extend(prediction_scores)
+
+        assert len(all_gt_labels) == len(all_predictions)
 
     # faster evaluation with already intersected grids from anovox
 
@@ -186,27 +225,17 @@ def main(args):
 
     pred_grids, gt_grids, scenario_dict = collect_data(voxelpred_dir, anovox_dir, args.datatype)
     gt_grids, anomaly_in_view = [x[0] for x in gt_grids], [y[1] for y in gt_grids]
-
-    # Debugging: Print the number of files in each list
-    print(f"Number of prediction grids: {len(pred_grids)}")
-    print(f"Number of ground truth grids: {len(gt_grids)}")
-
     assert len(pred_grids) == len(gt_grids), "amount of predictions and ground truth files not matching"
 
     # results_dict = initialize_results_dict(scenario_dict.keys())
     scenario_data = initialize_results_dict(scenario_dict)
     # total_preds = []
     # total_labels = []
-    if not args.intersect_grids:
-        # intersected_gt_grids = os_sorted(os.listdir(args.gt_grids_dir))
-        intersected_gt_grids = sorted(os.listdir(args.gt_grids_dir))
-
-
     for i, pred_grid in enumerate(tqdm(pred_grids)):
         # debug
         # if i < 50:
         #     continue
-        # if i > 1:
+        # if i > 5:
         #     break
         # debug end
         # pred_grid = pred_grids[i]
@@ -214,14 +243,14 @@ def main(args):
         gt_grid = gt_grids[i]
 
         # intersection
-        if args.intersect_grids:
-            preds_i, gts_i, anomaly_in_voxel_grid = metrics.intersect_grids(pred_grid, gt_grid, front_only=True, return_anomaly_detectable=True)
-        else:
-            print(pred_grid)
-            intersected_gt_grid = os.path.join(args.gt_grids_dir, intersected_gt_grids[i])
-            preds_i, gts_i = np.load(pred_grid), np.load(intersected_gt_grid)
-            preds_i = preds_i[:,-1:]
-            assert preds_i.size == gts_i.size, "intersected ground truth voxel grid does not match size of prediction voxel grid"
+        # if args.intersect_grids:
+        preds_i, gts_i, anomaly_in_voxel_grid = metrics.intersect_grids(pred_grid, gt_grid, front_only=True, return_anomaly_detectable=True)
+        # else:
+        #     print(pred_grid)
+        #     intersected_gt_grid = os.path.join(args.gt_grids_dir, intersected_gt_grids[i])
+        #     preds_i, gts_i = np.load(pred_grid), np.load(intersected_gt_grid)
+        #     preds_i = preds_i[:,-1:]
+        #     assert preds_i.size == gts_i.size, "intersected ground truth voxel grid does not match size of prediction voxel grid"
 
         # preds_i = np.load("pred_bin{}.npy".format(str(i)))
         # gts_i = np.load("gt_bin{}.npy".format(str(i)))
@@ -286,13 +315,24 @@ def main(args):
         total_dict["total_preds"].extend(preds_total)
         total_dict["total_gts"].extend(gts_total)
 
+    if args.store_final_values:
+        value_folder = args.output_file + "_values"
+        if os.path.exists(value_folder):
+            shutil.rmtree(value_folder)
+        os.mkdir(value_folder)
+        for key in total_dict.keys():
+            value_list = total_dict[key]
+            np.save(os.path.join(value_folder, key), value_list)
+
+
+
     yaml_dict = dict(
         Normality_Included = metrics.compute_metrics(total_dict["total_preds"], total_dict["total_gts"]),
         Anomalies_Only = metrics.compute_metrics(total_dict["detectable_preds"], total_dict["detectable_gts"]),
         Detection_Results_by_Anomaly_Size = create_size_detection_dict(anomaly_size_dict)
     )
 
-    with open('results.yaml', 'w') as yaml_file:
+    with open('{}.yaml'.format(args.output_file), 'w') as yaml_file:
         yaml.dump(yaml_dict, yaml_file, default_flow_style=False)
 
 
@@ -307,15 +347,19 @@ def main(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='OOD Evaluation')
-    parser.add_argument('--predictions', type=str, default='/disk/vanishing_data/du541/voxelpreds',
+    parser.add_argument('--predictions', type=str, default= '/disk/vanishing_data/du541//voxelpreds',
                         help=""""path to folder storing predictions in voxel format.""")
     parser.add_argument('--anovox_datapath', type=str, default='/disk/vanishing_data/du541/AnoVox(Sample)/Anovox',
                         help=""""path to anovox root""")
     parser.add_argument('--intersect_grids', action='store_true',
                         help=""""set to false if you already have ground truth voxel grids that match the size of the prediction voxel grids""")
-    parser.add_argument('--gt_grids_dir', type=str,
+    parser.add_argument('--intersected_grids_dir', type=str,
                         help=""""only needed if gt grids are already intersected or not in anovox. Not to be used
                         if you want to use original gt grids from anovox""")
+    parser.add_argument('--store_final_values', action='store_true',
+        help=""""store the final arrays with prediction and ground truth values to be evaluated. For testing purposes""")
+
+    parser.add_argument('--output_file', type=str, default='results')
 
     # TODO: intersect option is hard to implement and looks confusing, delete later
 
@@ -324,5 +368,5 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-
+    print("EVALUATING {}".format(args.predictions) + " ON {}".format(args.anovox_datapath))
     main(args)

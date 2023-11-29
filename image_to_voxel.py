@@ -141,6 +141,8 @@ def calculate_carla_depth(depth_img, new_depth, height, width):
 
 
 def transform_pcd(scores, depths):
+    # print("scores shape", scores.shape)
+    # print("scores img val", scores[:,:,])
     height, width = depths.shape
 
     camera_fov = args.camera_fov
@@ -240,8 +242,8 @@ def transform_pcd(scores, depths):
     # o3d.visualization.draw_geometries([depth_pcloud])
     depth_points = np.asarray(depth_pcloud.points)
     anomaly_score_list = np.asarray(anomaly_score_list)
-    print(np.amin(anomaly_score_list))
-    print(np.amax(anomaly_score_list))
+    # print(np.amin(anomaly_score_list))
+    # print(np.amax(anomaly_score_list))
     anomaly_score_list = np.reshape(np.array(anomaly_score_list), (len(anomaly_score_list), 1))
     return np.concatenate([depth_points, anomaly_score_list], axis=1)
 
@@ -331,6 +333,9 @@ def voxel_filter(pcloud, voxel_resolution, grid_size, offset):
     # sem = (np.asarray(pcloud.colors) * 255.0).astype(np.uint8)
     pcd = pcloud[:, :3]
     sem = pcloud[:, -1]
+    sem = sem / 255.0
+    print('sem values', sem)
+    print(pcloud.shape)
     # new_sem = np.arange(len(sem))
     # for i, value in enumerate(sem): # 
     #     color_index = np.where((COLOR_PALETTE == value).all(axis = 1))

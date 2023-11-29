@@ -12,12 +12,15 @@ import os
 # synthesized_gif_path = '/disk/vanishing_data/du541/pred_outputs_0_pred_0.gif'
 
 # Load images
-input_image_path = '/disk/vanishing_data/du541/RGB_in_anovox_832_320_images/frame_1850.png'
-synthesized_image_path = '/disk/vanishing_data/du541/RGB_out_anovox_832_320_images/frame_1850.png'
+input_image_path = '/disk/vanishing_data/du541/RGB_in_anovox_832_320_images/frame_1481.png'
+synthesized_image_path = '/disk/vanishing_data/du541/RGB_out_anovox_832_320_images/frame_1481.png'
 input_image = Image.open(input_image_path).convert('RGB')
 print(input_image.size)
 synthesized_image = Image.open(synthesized_image_path).convert('RGB')
 print(synthesized_image.size)
+
+save_dir = '/disk/vanishing_data/du541/thesis_plot/sample1_comparision'
+
 
 # Get original image dimensions
 original_height, original_width = input_image.size[::-1]
@@ -76,13 +79,13 @@ def plot_all_feature_maps(feature_maps, title, folder):
         plt.close(fig)  # Close the figure to free up memory
 
 # Define the folders to save the feature maps
-input_folder = 'feature_maps_original'
-synthesized_folder = 'feature_maps_synthesized'
+input_folder = '/disk/vanishing_data/du541/thesis_plot/sample1_feature_maps_original'
+synthesized_folder = '/disk/vanishing_data/du541/thesis_plot/sample1_feature_maps_synthesized'
 
 
-# # Plot and save the feature maps
-# plot_all_feature_maps(feature_maps_input, title='Feature Maps Input', folder=input_folder)
-# plot_all_feature_maps(feature_maps_synthesized, title='Feature Maps Synthesized', folder=synthesized_folder)
+# Plot and save the feature maps
+plot_all_feature_maps(feature_maps_input, title='Feature Maps Input', folder=input_folder)
+plot_all_feature_maps(feature_maps_synthesized, title='Feature Maps Synthesized', folder=synthesized_folder)
 
 
 
@@ -176,7 +179,7 @@ axs[0].axis('off')  # Hide axes
 
 # Display the synthesized image
 axs[1].imshow(synthesized_image)
-axs[1].set_title('Synthesized Image')
+axs[1].set_title('Reconstructed Image')
 axs[1].axis('off')  # Hide axes
 
 # Display the perceptual difference
@@ -188,4 +191,4 @@ axs[2].axis('off')  # Hide axes
 fig.colorbar(im, ax=axs[2], label='Perceptual Difference')
 
 # Save the figure to a file
-plt.savefig('comparison_frame_1850.png', bbox_inches='tight')  # This line saves the figure to a file
+plt.savefig(os.path.join(save_dir,'comparison_frame_1850.png'), bbox_inches='tight')  # This line saves the figure to a file
