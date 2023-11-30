@@ -12,8 +12,8 @@ import os
 # synthesized_gif_path = '/disk/vanishing_data/du541/pred_outputs_0_pred_0.gif'
 
 # Load images
-input_image_path = '/disk/vanishing_data/du541/RGB_in_anovox_832_320_images/frame_1481.png'
-synthesized_image_path = '/disk/vanishing_data/du541/RGB_out_anovox_832_320_images/frame_1481.png'
+input_image_path = '/disk/vanishing_data/du541/RGB_in_anovox_832_320_images/frame_200.png'
+synthesized_image_path = '/disk/vanishing_data/du541/RGB_out_anovox_832_320_images/frame_200.png'
 input_image = Image.open(input_image_path).convert('RGB')
 print(input_image.size)
 synthesized_image = Image.open(synthesized_image_path).convert('RGB')
@@ -83,9 +83,9 @@ input_folder = '/disk/vanishing_data/du541/thesis_plot/sample1_feature_maps_orig
 synthesized_folder = '/disk/vanishing_data/du541/thesis_plot/sample1_feature_maps_synthesized'
 
 
-# Plot and save the feature maps
-plot_all_feature_maps(feature_maps_input, title='Feature Maps Input', folder=input_folder)
-plot_all_feature_maps(feature_maps_synthesized, title='Feature Maps Synthesized', folder=synthesized_folder)
+# # Plot and save the feature maps
+# plot_all_feature_maps(feature_maps_input, title='Feature Maps Input', folder=input_folder)
+# plot_all_feature_maps(feature_maps_synthesized, title='Feature Maps Synthesized', folder=synthesized_folder)
 
 
 
@@ -191,4 +191,4 @@ axs[2].axis('off')  # Hide axes
 fig.colorbar(im, ax=axs[2], label='Perceptual Difference')
 
 # Save the figure to a file
-plt.savefig(os.path.join(save_dir,'comparison_frame_1850.png'), bbox_inches='tight')  # This line saves the figure to a file
+plt.savefig(os.path.join(save_dir,'comparison_frame_200.png'), bbox_inches='tight')  # This line saves the figure to a file

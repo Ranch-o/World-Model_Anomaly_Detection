@@ -1,5 +1,5 @@
-LOG_DIR: '/disk/vanishing_data/du541/tensorboard_logs9'
-TAG: 'semantic_iteration_from_10'
+LOG_DIR: '/disk/vanishing_data/du541/tensorboard_logs'
+TAG: 'training_results_sample'
 # TAG: 'the_last_26'
 
 GPUS: 1
